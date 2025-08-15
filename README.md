@@ -1,4 +1,5 @@
 # go-mcp-mysql
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/Zhwt/go-mcp-mysql)](https://archestra.ai/mcp-catalog/zhwt__go-mcp-mysql)
 
 ## Overview
 
