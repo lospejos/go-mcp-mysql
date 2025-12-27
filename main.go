@@ -83,16 +83,22 @@ func main() {
 	listDatabaseTool := mcp.NewTool(
 		"list_database",
 		mcp.WithDescription("List all databases in the MySQL server"),
+		mcp.WithTitleAnnotation("List Databases"),
+		mcp.WithReadOnlyHintAnnotation(true),
 	)
 
 	listTableTool := mcp.NewTool(
 		"list_table",
 		mcp.WithDescription("List all tables in the MySQL server"),
+		mcp.WithTitleAnnotation("List Tables"),
+		mcp.WithReadOnlyHintAnnotation(true),
 	)
 
 	createTableTool := mcp.NewTool(
 		"create_table",
 		mcp.WithDescription("Create a new table in the MySQL server. Make sure you have added proper comments for each column and the table itself"),
+		mcp.WithTitleAnnotation("Create Table"),
+		mcp.WithDestructiveHintAnnotation(true),
 		mcp.WithString("query",
 			mcp.Required(),
 			mcp.Description("The SQL query to create the table"),
@@ -102,6 +108,8 @@ func main() {
 	alterTableTool := mcp.NewTool(
 		"alter_table",
 		mcp.WithDescription("Alter an existing table in the MySQL server. Make sure you have updated comments for each modified column. DO NOT drop table or existing columns!"),
+		mcp.WithTitleAnnotation("Alter Table"),
+		mcp.WithDestructiveHintAnnotation(true),
 		mcp.WithString("query",
 			mcp.Required(),
 			mcp.Description("The SQL query to alter the table"),
@@ -111,6 +119,8 @@ func main() {
 	descTableTool := mcp.NewTool(
 		"desc_table",
 		mcp.WithDescription("Describe the structure of a table"),
+		mcp.WithTitleAnnotation("Describe Table"),
+		mcp.WithReadOnlyHintAnnotation(true),
 		mcp.WithString("name",
 			mcp.Required(),
 			mcp.Description("The name of the table to describe"),
@@ -121,6 +131,8 @@ func main() {
 	readQueryTool := mcp.NewTool(
 		"read_query",
 		mcp.WithDescription("Execute a read-only SQL query. Make sure you have knowledge of the table structure before writing WHERE conditions. Call `desc_table` first if necessary"),
+		mcp.WithTitleAnnotation("Read Query"),
+		mcp.WithReadOnlyHintAnnotation(true),
 		mcp.WithString("query",
 			mcp.Required(),
 			mcp.Description("The SQL query to execute"),
@@ -130,6 +142,8 @@ func main() {
 	writeQueryTool := mcp.NewTool(
 		"write_query",
 		mcp.WithDescription("Execute a write SQL query. Make sure you have knowledge of the table structure before executing the query. Make sure the data types match the columns' definitions"),
+		mcp.WithTitleAnnotation("Write Query"),
+		mcp.WithDestructiveHintAnnotation(true),
 		mcp.WithString("query",
 			mcp.Required(),
 			mcp.Description("The SQL query to execute"),
@@ -139,6 +153,8 @@ func main() {
 	updateQueryTool := mcp.NewTool(
 		"update_query",
 		mcp.WithDescription("Execute an update SQL query. Make sure you have knowledge of the table structure before executing the query. Make sure there is always a WHERE condition. Call `desc_table` first if necessary"),
+		mcp.WithTitleAnnotation("Update Query"),
+		mcp.WithDestructiveHintAnnotation(true),
 		mcp.WithString("query",
 			mcp.Required(),
 			mcp.Description("The SQL query to execute"),
@@ -148,6 +164,8 @@ func main() {
 	deleteQueryTool := mcp.NewTool(
 		"delete_query",
 		mcp.WithDescription("Execute a delete SQL query. Make sure you have knowledge of the table structure before executing the query. Make sure there is always a WHERE condition. Call `desc_table` first if necessary"),
+		mcp.WithTitleAnnotation("Delete Query"),
+		mcp.WithDestructiveHintAnnotation(true),
 		mcp.WithString("query",
 			mcp.Required(),
 			mcp.Description("The SQL query to execute"),
@@ -174,7 +192,8 @@ func main() {
 
 	if !ReadOnly {
 		s.AddTool(createTableTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			result, err := HandleExec(request.Params.Arguments["query"].(string), StatementTypeNoExplainCheck)
+			args := request.GetArguments()
+			result, err := HandleExec(args["query"].(string), StatementTypeNoExplainCheck)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -185,7 +204,8 @@ func main() {
 
 	if !ReadOnly {
 		s.AddTool(alterTableTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			result, err := HandleExec(request.Params.Arguments["query"].(string), StatementTypeNoExplainCheck)
+			args := request.GetArguments()
+			result, err := HandleExec(args["query"].(string), StatementTypeNoExplainCheck)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -195,7 +215,8 @@ func main() {
 	}
 
 	s.AddTool(descTableTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		result, err := HandleDescTable(request.Params.Arguments["name"].(string))
+		args := request.GetArguments()
+		result, err := HandleDescTable(args["name"].(string))
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
@@ -204,7 +225,8 @@ func main() {
 	})
 
 	s.AddTool(readQueryTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		result, err := HandleQuery(request.Params.Arguments["query"].(string), StatementTypeSelect)
+		args := request.GetArguments()
+		result, err := HandleQuery(args["query"].(string), StatementTypeSelect)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
@@ -214,7 +236,8 @@ func main() {
 
 	if !ReadOnly {
 		s.AddTool(writeQueryTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			result, err := HandleExec(request.Params.Arguments["query"].(string), StatementTypeInsert)
+			args := request.GetArguments()
+			result, err := HandleExec(args["query"].(string), StatementTypeInsert)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -225,7 +248,8 @@ func main() {
 
 	if !ReadOnly {
 		s.AddTool(updateQueryTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			result, err := HandleExec(request.Params.Arguments["query"].(string), StatementTypeUpdate)
+			args := request.GetArguments()
+			result, err := HandleExec(args["query"].(string), StatementTypeUpdate)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
@@ -236,7 +260,8 @@ func main() {
 
 	if !ReadOnly {
 		s.AddTool(deleteQueryTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			result, err := HandleExec(request.Params.Arguments["query"].(string), StatementTypeDelete)
+			args := request.GetArguments()
+			result, err := HandleExec(args["query"].(string), StatementTypeDelete)
 			if err != nil {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
