@@ -17,6 +17,15 @@ Please note that this is a work in progress and may not yet be ready for product
 go install -v github.com/Zhwt/go-mcp-mysql@latest
 ```
 
+## Build
+
+Windows:
+
+```sh
+$ go build -ldflags "-s -w -extldflags '-static'" -o go-mcp-mysql.exe .
+```
+
+
 ## Usage
 
 ### Method A: Using Command Line Arguments
@@ -63,7 +72,7 @@ Note: For those who put the binary outside of your `$PATH`, you need to replace 
     "mysql": {
       "command": "C:\\Users\\<username>\\Downloads\\go-mcp-mysql.exe",
       "args": [
-        ...
+         "--dsn", "username:password@tcp(localhost:3306)/mydb?parseTime=true&loc=Local"
       ]
     }
   }
